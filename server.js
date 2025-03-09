@@ -80,10 +80,13 @@ io.on("connection", (socket) => {
 
     decideTolkyResponse(params).then((res) => {
       console.log(`Resposta do Tolky: ${JSON.stringify(res)}`);
-      io.emit("chat message", {
-        user: "tolky",
-        message: res?.data?.assistantResponse,
-      });
+      let message = res?.data?.assistantResponse;
+      if (message) {
+        io.emit("chat message", {
+          user: "tolky",
+          message,
+        });
+      }
     });
 
     // Atualiza o nome do usuário para este socket (permite atualização em tempo real)
