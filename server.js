@@ -24,10 +24,14 @@ app.get("/", (req, res) => {
 
 io.on("connection", (socket) => {
   console.log("Usuário conectado");
+  let messages = [];
+
+  io.emit("new user entered", {});
 
   // Espera receber um objeto { user, message }
   socket.on("chat message", (data) => {
     console.log(`Mensagem recebida: ${JSON.stringify(data)}`);
+    messages.push(data);
     io.emit("chat message", data);
   });
 
