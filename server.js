@@ -3,18 +3,19 @@ const app = express();
 const http = require("http").createServer(app);
 const cors = require("cors");
 
-const io = require("socket.io")(http, {
-  cors: {
-    origin: "https://chat-frontend.fly.dev",
-    methods: ["GET", "POST"],
-  },
-});
-
+// Aplica CORS para todas as rotas do Express
 app.use(
   cors({
     origin: "https://chat-frontend.fly.dev",
   })
 );
+
+const io = require("socket.io")(http, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+  },
+});
 
 // Rota simples para teste
 app.get("/", (req, res) => {
