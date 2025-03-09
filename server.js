@@ -15,7 +15,7 @@ io.on("connection", (socket) => {
 
   // Espera receber um objeto { user, message }
   socket.on("chat message", (data) => {
-    console.log(`Mensagem recebida: ${json.stringify(data)}`);
+    console.log(`Mensagem recebida: ${JSON.stringify(data)}`);
     io.emit("chat message", data);
   });
 
