@@ -2,25 +2,22 @@ const express = require("express");
 const app = express();
 const http = require("http").createServer(app);
 const io = require("socket.io")(http, {
-  cors: { origin: "*" }, // Permite conexões de qualquer origem (apenas para desenvolvimento)
+  cors: { origin: "*" },
 });
 
-// Rota simples para teste (opcional)
+// Rota simples para teste
 app.get("/", (req, res) => {
   res.send("Servidor de chat com Socket.IO funcionando!");
 });
 
-// Quando um novo cliente se conectar...
 io.on("connection", (socket) => {
   console.log("Usuário conectado");
 
-  // Escuta mensagens enviadas pelo cliente
-  socket.on("chat message", (msg) => {
-    // Reenvia a mensagem para todos os clientes conectados
-    io.emit("chat message", msg);
+  // Espera receber um objeto { user, message }
+  socket.on("chat message", (data) => {
+    io.emit("chat message", data);
   });
 
-  // Quando o cliente se desconecta...
   socket.on("disconnect", () => {
     console.log("Usuário desconectado");
   });
