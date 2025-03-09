@@ -65,6 +65,8 @@ io.on("connection", (socket) => {
 
   // Ao receber uma mensagem
   socket.on("chat message", (data) => {
+    updateStats();
+    updateUserList();
     console.log(`Mensagem recebida: ${JSON.stringify(data)}`);
 
     // Se o usuário não for informado, mantém como "anônimo"
