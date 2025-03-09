@@ -3,6 +3,7 @@ const app = express();
 const http = require("http").createServer(app);
 const cors = require("cors");
 const { wppSend } = require("./app/wppSend");
+const { decideTolkyResponse } = require("./app/processMessage");
 
 // Aplica CORS para todas as rotas do Express
 app.use(
@@ -46,7 +47,7 @@ io.on("connection", (socket) => {
   console.log("Usuário conectado: ", socket.id);
 
   wppSend().then((res) => {
-    console.log(res);
+    console.log(`Aviso enviado ao Whatssap sobre a entrada de alguém na sala`);
   });
 
   // Adiciona o usuário com um nome padrão "anônimo"
@@ -70,6 +71,20 @@ io.on("connection", (socket) => {
     if (!data.user || data.user === "") {
       data.user = null;
     }
+
+    let params = {
+      messages,
+      message: data?.message,
+    };
+
+    decideTolkyResponse(params).then((res) => {
+      console.log(`Resposta do Tolky: ${JSON.stringify(res)}`);
+      io.emit("chat message", {
+        user: "tolky",
+        message: res?.data?.assistantResponse,
+      });
+    });
+
     // Atualiza o nome do usuário para este socket (permite atualização em tempo real)
     connectedUsers[socket.id] = data.user;
 
