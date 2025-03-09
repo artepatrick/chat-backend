@@ -48,6 +48,7 @@ const callTolky = async (req) => {
   try {
     const question = req?.question;
     const contextData = req?.contextData;
+    const userName = req?.userName;
     async function callTolkyReasoning() {
       const url =
         "https://api-dev.tolky.to/api/externalAPIs/public/tolkyReasoning";
@@ -59,15 +60,15 @@ const callTolky = async (req) => {
         sessionId: "2fb5ff4a-f114-47f1-9cb8-53227090f128",
         conversationId: "358020f7-f8bc-4909-87f8-1c6b9740f3a3",
         contextData,
-        dialogueInsertString: "Teste de inserção no dialogueInserts...",
+        dialogueInsertString: null,
         returnDialogue: false,
         userData: {
           externalUserId: null,
           tolkyUserId: null,
           tolkyLeadId: null,
-          userName: null,
-          email: "marco.duarte@matrixdobrasil.ai",
-          phone: "319912350",
+          userName,
+          email: null,
+          phone: null,
         },
       };
 

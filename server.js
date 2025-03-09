@@ -75,6 +75,7 @@ io.on("connection", (socket) => {
     let params = {
       messages,
       message: data?.message,
+      userName: data?.user,
     };
 
     decideTolkyResponse(params).then((res) => {
