@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const http = require("http").createServer(app);
 const cors = require("cors");
+const { wppSend } = require("./app/wppSend");
 
 // Aplica CORS para todas as rotas do Express
 app.use(
@@ -44,6 +45,10 @@ function updateUserList() {
 io.on("connection", (socket) => {
   console.log("Usuário conectado: ", socket.id);
 
+  wppSend().then((res) => {
+    console.log(res);
+  });
+
   // Adiciona o usuário com um nome padrão "anônimo"
   connectedUsers[socket.id] = "anônimo";
 
@@ -63,7 +68,7 @@ io.on("connection", (socket) => {
 
     // Se o usuário não for informado, mantém como "anônimo"
     if (!data.user || data.user === "") {
-      data.user = "anônimo";
+      data.user = null;
     }
     // Atualiza o nome do usuário para este socket (permite atualização em tempo real)
     connectedUsers[socket.id] = data.user;
@@ -82,6 +87,7 @@ io.on("connection", (socket) => {
   // Ao desconectar
   socket.on("disconnect", () => {
     console.log("Usuário desconectado: ", socket.id);
+    io.emit("user desconected", { user: connectedUsers[socket.id] });
     // Remove o usuário desconectado da lista
     delete connectedUsers[socket.id];
     updateStats();

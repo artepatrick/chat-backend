@@ -4,11 +4,12 @@
     "description": "Backend para chat simples com Socket.IO",
     "main": "server.js",
     "scripts": {
-      "start": "node server.js"
+        "start": "node server.js"
     },
     "dependencies": {
-      "express": "^4.18.2",
-      "socket.io": "^4.6.0"
+        "axios": "^1.8.2",
+        "express": "^4.18.2",
+        "nodemon": "^3.1.9",
+        "socket.io": "^4.6.0"
     }
-  }
-  
+}
