@@ -4,7 +4,8 @@
     "description": "Backend para chat simples com Socket.IO",
     "main": "server.js",
     "scripts": {
-        "start": "node server.js"
+        "start": "node server.js",
+        "start2": "node elevenLabs/voiceSocket.js"
     },
     "dependencies": {
         "axios": "^1.8.2",

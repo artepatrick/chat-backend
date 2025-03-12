@@ -6,14 +6,14 @@ const VOICE_ID = "oJebhZNaPllxk6W0LSBA";
 const MODEL = "eleven_turbo_v2_5";
 const LANG = "pt";
 const wsUrl = `wss://api.elevenlabs.io/v1/voices/${VOICE_ID}/stream?model=${MODEL}&lang=${LANG}&logging=true`;
-let PORT = process.env.PORT || 8081;
-const { decideTolkyResponse } = require("./app/processMessage");
+const PORT = process.env.PORT || 8081;
 
 // server.js
+const http = require("http").createServer(app);
+const { Server } = require("socket.io");
+const tolkyReasoning = require("./tolkyReasoning"); // função importada que processa a pergunta
 const express = require("express");
 const app = express();
-const http = require("http");
-const { Server } = require("socket.io");
 const cors = require("cors");
 app.use(
   cors({
@@ -45,7 +45,7 @@ io.on("connection", (socket) => {
 
     try {
       // Gera a resposta usando a função importada
-      const answerText = await decideTolkyResponse(questionText);
+      const answerText = await tolkyReasoning(questionText);
       console.log("Resposta gerada:", answerText);
 
       // Conecta ao ElevenLabs via WebSocket

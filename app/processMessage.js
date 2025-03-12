@@ -47,7 +47,7 @@ const callTolky = async (req) => {
   console.log(msg);
   try {
     const question = req?.question;
-    const contextData = req?.contextData;
+    const contextData = `--- <group_message_instructions> A seguir, os dados de contexto. Esta mensagem é uma mensagem enviada por alguém em um grupo. A pesar dos dados do usuário associado a esta conversa via sistema, neste caso o dado de usuário que está válido é o que vem nesta parte do contexto: ${req?.contextData} </group_message_instructions>`;
     const userName = req?.userName;
     async function callTolkyReasoning() {
       const url =
