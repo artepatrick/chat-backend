@@ -1,64 +1,101 @@
 // server.js
-import WebSocket from "ws";
-import express from "express";
-import http from "http";
-import path from "path";
-import { fileURLToPath } from "url";
+import { WebSocket, WebSocketServer } from "ws";
+import { v4 as uuidv4 } from "uuid";
+import dotenv from "dotenv";
+dotenv.config();
 
-// Configuração do Express para servir os arquivos da interface
-const app = express();
-const server = http.createServer(app);
-const PORT = process.env.PORT || 3000;
+// Configuração: defina sua chave de API da OpenAI na variável de ambiente OPENAI_API_KEY
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+if (!OPENAI_API_KEY) {
+  console.error("Defina a variável OPENAI_API_KEY em seu ambiente.");
+  process.exit(1);
+}
 
-// Determina o diretório atual e configura a pasta 'public'
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-app.use(express.static(path.join(__dirname, "public")));
-
-// Conexão com a API Realtime da OpenAI via WebSocket
-const realtimeUrl =
-  "wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-12-17";
-const realtimeWs = new WebSocket(realtimeUrl, {
-  headers: {
-    Authorization: "Bearer " + process.env.OPENAI_API_KEY,
+// Função para conectar à API Realtime da OpenAI
+function connectToOpenAI() {
+  const openaiUrl =
+    "wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-12-17";
+  const headers = {
+    Authorization: "Bearer " + OPENAI_API_KEY,
     "OpenAI-Beta": "realtime=v1",
-  },
+  };
+  return new WebSocket(openaiUrl, { headers });
+}
+
+// Cria o servidor WebSocket para o front-end na porta 8080
+const server = new WebSocketServer({ port: 8080 }, () => {
+  console.log("Servidor WebSocket rodando na porta 8080.");
 });
 
-realtimeWs.on("open", () => {
-  console.log("Conectado à API Realtime da OpenAI.");
-});
-
-realtimeWs.on("message", (data) => {
-  const message = JSON.parse(data.toString());
-  console.log("Mensagem recebida da OpenAI:", message);
-  // Encaminha as mensagens recebidas para todos os clientes conectados
-  clientWss.clients.forEach((client) => {
-    if (client.readyState === WebSocket.OPEN) {
-      client.send(JSON.stringify(message));
-    }
-  });
-});
-
-// Criação de um WebSocket server para os clientes (navegadores)
-const clientWss = new WebSocket.Server({ server });
-
-clientWss.on("connection", (clientSocket) => {
+server.on("connection", (clientSocket) => {
   console.log("Cliente conectado.");
 
-  clientSocket.on("message", (message) => {
-    console.log("Mensagem recebida do cliente:", message);
-    // Aqui você pode decidir como processar os dados dos clientes.
-    // Exemplo: encaminhar dados (como chunks de áudio) para a API Realtime
-    realtimeWs.send(message);
+  // Para cada conexão de cliente, conecta à API Realtime da OpenAI
+  const openaiSocket = connectToOpenAI();
+
+  openaiSocket.on("open", () => {
+    console.log("Conectado à OpenAI Realtime API.");
+    clientSocket.send(
+      JSON.stringify({ message: "Conectado à OpenAI Realtime API." })
+    );
+  });
+
+  // Encaminha mensagens da OpenAI para o cliente
+  openaiSocket.on("message", (data) => {
+    console.log("Openai mandou alguma coisa de volta: " + data);
+    // Se a mensagem for texto, encaminha como string; caso contrário, trata como binário
+    if (typeof data === "string") {
+      clientSocket.send(data);
+    } else {
+      clientSocket.send(data);
+    }
+  });
+
+  openaiSocket.on("error", (err) => {
+    console.error("Erro na conexão com a OpenAI:", err);
+    clientSocket.send(
+      JSON.stringify({ error: "Erro na conexão com a OpenAI: " + err.message })
+    );
+  });
+
+  openaiSocket.on("close", () => {
+    console.log("Conexão com a OpenAI encerrada.");
+    clientSocket.send(
+      JSON.stringify({ message: "Conexão com a OpenAI encerrada." })
+    );
+  });
+
+  // Trata as mensagens vindas do cliente
+  clientSocket.on("message", (data) => {
+    if (typeof data === "string") {
+      // Encaminha diretamente a mensagem JSON enviada pelo client
+      console.log("Mensagem do cliente: " + data);
+      openaiSocket.send(data);
+    } else {
+      // Se for um chunk binário, encapsula e envia
+      const base64Audio = data.toString("base64");
+      const event = {
+        event_id: uuidv4(),
+        type: "input_audio_buffer.append",
+        audio: base64Audio,
+      };
+      openaiSocket.send(JSON.stringify(event));
+      console.log("Chunk de áudio encaminhado para a OpenAI.");
+    }
   });
 
   clientSocket.on("close", () => {
     console.log("Cliente desconectado.");
+    // Se o cliente desconectar, encerramos também a conexão com a OpenAI
+    if (
+      openaiSocket.readyState === WebSocket.OPEN ||
+      openaiSocket.readyState === WebSocket.CONNECTING
+    ) {
+      openaiSocket.close();
+    }
   });
-});
 
-// Inicializa o servidor HTTP
-server.listen(PORT, () => {
-  console.log(`Servidor rodando em http://localhost:${PORT}`);
+  clientSocket.on("error", (err) => {
+    console.error("Erro na conexão do cliente:", err);
+  });
 });
