@@ -1,4 +1,4 @@
-const WebSocket = require("ws");
+import WebSocket from "ws";
 
 // Configurações da ElevenLabs
 const ELEVEN_LABS_KEY = process.env.ELEVEN_LABS_KEY;
